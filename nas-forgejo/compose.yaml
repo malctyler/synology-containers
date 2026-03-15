@@ -1,0 +1,60 @@
+services:
+  forgejo-ts:
+    image: tailscale/tailscale:latest
+    container_name: nas-forgejo-ts
+    hostname: nas-git
+    environment:
+      - TS_AUTHKEY=tskey-auth-REPLACE_ME
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_SERVE_CONFIG=/config/serve.json
+      - TS_USERSPACE=true
+    volumes:
+      - /volume1/forgejo/appdata/ts-config:/config
+      - /volume1/forgejo/appdata/ts-state:/var/lib/tailscale
+    restart: unless-stopped
+
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:11
+    container_name: nas-forgejo
+    network_mode: service:forgejo-ts
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - FORGEJO__server__ROOT_URL=https://nas-git.sable-amberjack.ts.net
+      - FORGEJO__server__SSH_DOMAIN=nas-git
+    volumes:
+      - /volume1/forgejo/appdata/data:/data
+    restart: unless-stopped
+
+  forgejo-runner:
+    image: code.forgejo.org/forgejo/runner:6
+    container_name: nas-forgejo-runner
+    user: "0"
+    depends_on:
+      - forgejo
+    command: >-
+      sh -c '
+      cd /data;
+      if [ ! -f /data/config.yaml ]; then
+        forgejo-runner generate-config > /data/config.yaml;
+        sed -i "s|labels: \[\]|labels: [\"ubuntu-latest:docker://node:20-bookworm\", \"ubuntu-22.04:docker://node:20-bookworm\", \"ubuntu-24.04:docker://node:20-bookworm\"]|" /data/config.yaml;
+      fi;
+      while ! nc -z forgejo-ts 3000; do
+        echo "Waiting for Forgejo to be available...";
+        sleep 5;
+      done;
+      sleep 5;
+      if [ ! -f /data/.runner ]; then
+        forgejo-runner register --no-interactive --instance http://forgejo-ts:3000 --token REPLACE_ME --name nas-runner;
+        echo "Registration result: $$?";
+        ls -la /data/.runner 2>/dev/null || echo "WARNING: .runner file not created";
+      else
+        echo "Runner already registered, skipping registration";
+      fi;
+      exec forgejo-runner daemon -c /data/config.yaml'
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - /volume1/forgejo/appdata/runner:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
