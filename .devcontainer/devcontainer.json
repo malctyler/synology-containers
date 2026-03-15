@@ -1,0 +1,82 @@
+{
+  "name": "synology-containers-dev",
+  "build": {
+    "dockerfile": "../Dockerfile"
+  },
+
+  // Mount the folder you opened in VS Code to /workspace
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace",
+
+  // Also make the entire D: drive available at /d
+  "mounts": [
+    "source=D:\\,target=/d,type=bind,consistency=cached"
+  ],
+
+  "remoteUser": "dev",
+
+  // Keep the container alive so VS Code can attach
+  "overrideCommand": true,
+
+  // We already set the container user/UID at build time
+  "updateRemoteUserUID": false,
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Azure & Docker
+        "ms-azuretools.vscode-azureaccount",
+        "ms-vscode.azurecli",
+        "ms-azuretools.vscode-docker",
+
+        // YAML
+        "redhat.vscode-yaml",
+
+        // Terraform
+        "HashiCorp.terraform",
+
+        // pre-commit
+        "elagil.pre-commit-helper",
+
+        // Python
+        "ms-python.python",
+
+        // PowerShell (debugger, IntelliSense, etc.)
+        "ms-vscode.PowerShell",
+
+        // Git UX
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+
+        // Bash debugger
+        "rogalmic.bash-debug"
+      ],
+      "settings": {
+        // Python
+        "python.defaultInterpreterPath": "/usr/bin/python",
+        "python.terminal.activateEnvironment": false,
+
+        // YAML
+        "yaml.validate": true,
+        "yaml.format.enable": true,
+
+        // Terraform
+        "terraform.languageServer": { "external": true },
+
+        // PowerShell: point to pwsh and prefer it
+        "powershell.powerShellAdditionalExePaths": {
+          "PowerShell": "/usr/bin/pwsh"
+        },
+        "powershell.powerShellDefaultVersion": "PowerShell",
+
+        // Terminals (optional): expose a pwsh profile alongside bash
+        "terminal.integrated.profiles.linux": {
+          "bash": { "path": "/bin/bash" },
+          "pwsh": { "path": "/usr/bin/pwsh" }
+        }
+      }
+    }
+  },
+
+  "postCreateCommand": "git --version && az version && terraform version && python --version && pip --version && pre-commit --version && pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion; (Get-Module Az -ListAvailable | Select-Object -First 1 Name,Version)'"
+}

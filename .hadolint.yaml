@@ -1,0 +1,4 @@
+ignore:
+  - DL3008  # apt version pinning — intentionally unpinned in this dev container
+  - DL3013  # pip version pinning — intentionally unpinned in this dev container
+  - SC2016  # single-quoted eval intentional — expands at shell runtime, not build time

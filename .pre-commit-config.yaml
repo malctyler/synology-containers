@@ -29,3 +29,22 @@ repos:
           - ci        # CI/CD config changes
           - chore     # maintenance, tooling, config
           - revert    # reverts a prior commit
+
+  # Dockerfile linting
+  - repo: https://github.com/AleksaC/hadolint-py
+    rev: v2.14.0
+    hooks:
+      - id: hadolint
+        args:
+          - --failure-threshold=warning
+          - --ignore=DL3008 # apt version pinning: intentionally unpinned dev container
+          - --ignore=DL3013 # pip version pinning: intentionally unpinned dev container
+          - --ignore=SC2016 # single-quoted eval: intentional, expands at shell runtime
+
+  # Security scanning for Dockerfiles and Compose files
+  - repo: https://github.com/bridgecrewio/checkov
+    rev: 3.2.0
+    hooks:
+      - id: checkov
+        files: (Dockerfile|compose\.yaml)$
+        args: [--quiet, --framework, dockerfile,yaml]
