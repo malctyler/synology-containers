@@ -4,7 +4,7 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ----------------------------------------------------------
-# 1) Base tools
+# 1) Base tools.
 # ----------------------------------------------------------
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y \
