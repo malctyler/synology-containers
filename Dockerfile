@@ -1,5 +1,4 @@
 # Dockerfile — Azure CLI + Git + Terraform + Python + pre-commit + PowerShell (Az) + Oh My Posh + Bash
-# checkov:skip=CKV_DOCKER_2:Dev container — no runtime health check needed
 FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -9,6 +8,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # ----------------------------------------------------------
 # 1) Base tools
 # ----------------------------------------------------------
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl gnupg apt-transport-https lsb-release \
     git bash-completion unzip fontconfig locales \
@@ -22,6 +22,7 @@ ENV LC_ALL=en_US.UTF-8
 # ----------------------------------------------------------
 # 2) Azure CLI
 # ----------------------------------------------------------
+# hadolint ignore=DL3008
 RUN mkdir -p /etc/apt/keyrings \
  && curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
     | gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg \
@@ -34,6 +35,7 @@ RUN mkdir -p /etc/apt/keyrings \
 # ----------------------------------------------------------
 # 3) Terraform
 # ----------------------------------------------------------
+# hadolint ignore=DL3008
 RUN curl -fsSL https://apt.releases.hashicorp.com/gpg \
     | gpg --dearmor -o /etc/apt/keyrings/hashicorp-archive-keyring.gpg \
  && chmod 644 /etc/apt/keyrings/hashicorp-archive-keyring.gpg \
@@ -46,6 +48,7 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg \
 # ----------------------------------------------------------
 # 4) Python 3 + pip + venv + pre-commit (+ symlinks)
 # ----------------------------------------------------------
+# hadolint ignore=DL3008,DL3013
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip python3-venv \
  && ln -sf /usr/bin/python3 /usr/bin/python \
@@ -56,6 +59,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ----------------------------------------------------------
 # 5) PowerShell (pwsh) + Az modules
 # ----------------------------------------------------------
+# hadolint ignore=DL3008
 RUN set -eux; \
   curl -fsSL -o /tmp/packages-microsoft-prod.deb https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb; \
   dpkg -i /tmp/packages-microsoft-prod.deb; \
@@ -84,9 +88,9 @@ ARG GID=1000
 RUN set -eux; \
     groupadd -g ${GID} ${USERNAME} 2>/dev/null || true; \
     if getent passwd | awk -F: -v id=${UID} '$3==id {found=1} END{exit !found}'; then \
-        useradd -lm -s /bin/bash -g ${GID} ${USERNAME}; \
+        useradd -l -m -s /bin/bash -g ${GID} ${USERNAME}; \
     else \
-        useradd -lm -s /bin/bash -u ${UID} -g ${GID} ${USERNAME}; \
+        useradd -l -m -s /bin/bash -u ${UID} -g ${GID} ${USERNAME}; \
     fi
 
 # ----------------------------------------------------------
@@ -96,8 +100,8 @@ USER $USERNAME
 WORKDIR /home/$USERNAME
 
 # Bash: enable completion and Oh My Posh
+# hadolint ignore=SC2016
 RUN echo 'source /usr/share/bash-completion/bash_completion' >> ~/.bashrc \
- \
  && echo 'eval "$(oh-my-posh init bash --config /etc/ohmyposh/themes/blue-owl.omp.json)"' >> ~/.bashrc
 
 # PowerShell: configure Oh My Posh profile
