@@ -3,13 +3,11 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
 # ----------------------------------------------------------
 # 1) Base tools
 # ----------------------------------------------------------
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
     ca-certificates curl gnupg apt-transport-https lsb-release \
     git bash-completion unzip fontconfig locales \
  && rm -rf /var/lib/apt/lists/* \
@@ -18,6 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # ----------------------------------------------------------
 # 2) Azure CLI
@@ -29,8 +29,9 @@ RUN mkdir -p /etc/apt/keyrings \
  && chmod 644 /etc/apt/keyrings/microsoft.gpg \
  && echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ noble main" \
     > /etc/apt/sources.list.d/azure-cli.list \
- && apt-get update && apt-get install -y --no-install-recommends azure-cli \
- && rm -rf /var/lib/apt/lists/*
+ && apt-get update && apt-get install -y azure-cli \
+ && rm -rf /var/lib/apt/lists/* \
+ && python3 -m compileall -q /opt/az/lib/
 
 # ----------------------------------------------------------
 # 3) Terraform
@@ -41,7 +42,7 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg \
  && chmod 644 /etc/apt/keyrings/hashicorp-archive-keyring.gpg \
  && echo "deb [signed-by=/etc/apt/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com noble main" \
     > /etc/apt/sources.list.d/hashicorp.list \
- && apt-get update && apt-get install -y --no-install-recommends terraform \
+ && apt-get update && apt-get install -y terraform \
  && terraform -install-autocomplete \
  && rm -rf /var/lib/apt/lists/*
 
@@ -49,7 +50,7 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg \
 # 4) Python 3 + pip + venv + pre-commit (+ symlinks)
 # ----------------------------------------------------------
 # hadolint ignore=DL3008,DL3013
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
     python3 python3-pip python3-venv \
  && ln -sf /usr/bin/python3 /usr/bin/python \
  && ln -sf /usr/bin/pip3 /usr/bin/pip \
@@ -65,7 +66,7 @@ RUN set -eux; \
   dpkg -i /tmp/packages-microsoft-prod.deb; \
   rm -f /tmp/packages-microsoft-prod.deb; \
   apt-get update; \
-  apt-get install -y --no-install-recommends powershell; \
+  apt-get install -y powershell; \
   rm -rf /var/lib/apt/lists/*
 RUN pwsh -NoLogo -NoProfile -Command \
   "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \
@@ -100,7 +101,6 @@ USER $USERNAME
 WORKDIR /home/$USERNAME
 
 # Bash: enable completion and Oh My Posh
-# hadolint ignore=SC2016
 RUN echo 'source /usr/share/bash-completion/bash_completion' >> ~/.bashrc \
  && echo 'eval "$(oh-my-posh init bash --config /etc/ohmyposh/themes/blue-owl.omp.json)"' >> ~/.bashrc
 
