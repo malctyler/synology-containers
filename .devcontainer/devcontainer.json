@@ -78,5 +78,5 @@
     }
   },
 
-  "postCreateCommand": "git --version && az version && terraform version && python --version && pip --version && pre-commit --version && pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion; (Get-Module Az -ListAvailable | Select-Object -First 1 Name,Version)'"
+  "postCreateCommand": "git --version && az --version && terraform version && python --version && pip --version && pre-commit --version && pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion; (Get-Module Az.Accounts -ListAvailable | Select-Object -First 1 Name,Version)'"
 }

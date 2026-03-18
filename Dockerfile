@@ -10,6 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     ca-certificates curl gnupg apt-transport-https lsb-release \
     git bash-completion unzip fontconfig locales \
+    python3 python3-pip python3-venv \
  && rm -rf /var/lib/apt/lists/* \
  && locale-gen en_US.UTF-8 \
  && update-locale LANG=en_US.UTF-8
@@ -49,10 +50,8 @@ RUN curl -fsSL https://apt.releases.hashicorp.com/gpg \
 # ----------------------------------------------------------
 # 4) Python 3 + pip + venv + pre-commit (+ symlinks)
 # ----------------------------------------------------------
-# hadolint ignore=DL3008,DL3013
-RUN apt-get update && apt-get install -y \
-    python3 python3-pip python3-venv \
- && ln -sf /usr/bin/python3 /usr/bin/python \
+# hadolint ignore=DL3013
+RUN ln -sf /usr/bin/python3 /usr/bin/python \
  && ln -sf /usr/bin/pip3 /usr/bin/pip \
  && pip install --no-cache-dir --break-system-packages pre-commit \
  && rm -rf /var/lib/apt/lists/*
